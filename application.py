@@ -21,23 +21,14 @@ def extractUserInput():
 @app.route('/result')
 def compResult():
 
-    app_id = '6ff8d3c1'
-
-    app_key = 'fdabfa4e797795d7f9294a40ee67d334'
-    language = 'en'
     word_id = request.args.get('userInputCat')
 
-    url = 'https://od-api.oxforddictionaries.com:443/api/v1/entries/' + \
-        language + '/' + word_id.lower() + '/synonyms;antonyms'
-    # // url Normalized frequency
-    # urlFR = 'https://od-api.oxforddictionaries.com:443/api/v1/stats/frequency/word/'  + language + '/?corpus=nmc&lemma=' + word_id.lower()
+    # new URL
+    url = 'https://relatedwords.org/api/related?term=' + word_id.lower()
 
-    r = requests.get(url, headers={'app_id': app_id, 'app_key': app_key})
+    r = requests.get(url, headers={})
 
-    # print("code {}\n".format(r.status_code))
-    # print("text \n" + r.text)
-    # print("json \n" + json.dumps(r.json()))
-
+    # Old Fn for converting text into data
     def textChar(dc):
         allWord = []
         for z in range(0, len(dc['results'][0]["lexicalEntries"])):
@@ -63,20 +54,15 @@ def compResult():
                                                 allWord.append(vv)
         return allWord
 
-    # text = json.dumps(r.json())
-
     output = []
-    print("*****")
-    print(r)
+
     if r.status_code == 404:
         outputJquery = 0
     else:
         text = r.json()
-        extractedWord = textChar(text)
-        for i in extractedWord:
-            if len(i.split(' ')) < 2:
-                if i[0].lower() != 's':
-                    output.append(i.lower())
+        for i in text[0:10]:
+            if i['word'][0].lower() != 's':
+                output.append(i['word'].lower())
 
         varRandom = random.randint(0, len(output))
 
