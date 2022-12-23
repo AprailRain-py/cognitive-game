@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<title>Category</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- <link rel="stylesheet" href="style2.css"> -->
+
+<!-- <link rel="stylesheet" href="style2.css"> -->
+<link rel="stylesheet" href="{{ url_for('static', filename='./css/style2.css') }}">
+
+<link href="https://fonts.googleapis.com/css?family=Raleway" rel="stylesheet" type="text/css">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.1/css/all.css" integrity="sha384-5sAR7xN1Nv6T6+dT2mhtzEpVJvfS3NScPQTrOxhwjIuvcA67KV2R5Jz6kr4abQsz" crossorigin="anonymous">
+
+
+<script src="{{ url_for('static', filename='./js/jquery-3.3.1.js') }}"></script>
+<!-- <script src="../jquery-3.3.1.js"></script> -->
+
+<script>
+$("document").ready(function(){
+
+	$("#btn").on("click", startTimer);
+
+	//$("#btnTemp").on("click", ajaxCall);
+
+	$("input[name=userInput]").on("focus", function(){$("input[name=userInput]").removeClass("error");});
+		
+});
+	
+//**********specific fucntions starts from her*************
+
+	
+
+	function ajaxCall(){
+	
+	$.getJSON('/result', {userInputCat : $("input[name=userInput]").val(),} ,
+		 function (data) { 
+			$("#ajaxContent").text(data.result);
+			varCameOutput = data.result;
+		});	
+		
+
+	};
+
+
+	var varInterval,varTimeout;
+	var varCameOutput=null;
+	var allCatWords=[];
+	var compOutput =[];
+	var endGameFlag = 0;
+	var endGameMsg = "";
+	var foo=0;
+	var tRow=2;
+ 	var score=10;
+
+
+	function startTimer(){
+	
+	if ($("#btn").text() == "Restart"){
+			$("input[name=userInput]").removeAttr("disabled");
+			$("#btn").text("Play");
+			$("input[name=timer]").val("");
+			$("input[name=output]").val("");
+			$("input[name=userInput]").val("");	
+			window.clearInterval(varInterval);
+			window.clearTimeout(varTimeout);
+			allCatWords=[];
+			compOutput = [];
+	                location.reload();
+			return;
+	};
+
+
+	if ($("input[name=userInput]").val().length == 0){
+		$("input[name=userInput]").addClass("error"); $("input[name=userInput]").removeClass("w3-border");
+	}
+	
+	else{
+	
+		varInput = $("input[name=userInput]").val();
+		
+		if (varInput.slice(0,1).toLowerCase() == "s"){
+			endGameFlag=1;
+			endGameMsg = "Game Over! Category word can not start with 'S'. Try again!.";
+		}
+		else if (allCatWords.includes(varInput)){
+			endGameFlag=2;
+			endGameMsg = "Game Over! You can not repeat a word. Try again!.";
+		};
+
+		if (endGameFlag > 0 ){
+			alert(endGameMsg);						
+			window.clearInterval(varInterval);
+			window.clearTimeout(varTimeout);
+			$("input[name=timer]").val("");
+			$("input[name=output]").val("");
+			$("input[name=userInput]").val("");
+			allCatWords=[];
+			compOutput = [];
+			endGameFlag=0;
+			location.reload();
+			return;
+		};
+
+//**checking if Interval is going on, close it 
+		
+
+		if (varInterval){
+
+			window.clearInterval(varInterval);
+			window.clearTimeout(varTimeout);
+			$("input[name=timer]").removeClass("noTime");
+			$("input[name=timer]").addClass("haveTime");
+			varInterval = null; varTimeout = null; varTimerInterval = 10;
+			if (allCatWords.includes(varInput)){
+				
+				$("input[name=userInput]").addClass("error"); 
+				$("input[name=userInput]").removeClass("w3-border");
+
+				};
+	  };
+
+//***rebuild the Interval and Timeout
+
+			$("input[name=userInput]").addClass("w3-border"); $("input[name=userInput]").removeClass("error");
+
+//**check data received from ajaxCall function is valid and pass it to OUTPUT
+
+		allCatWords.push($("input[name=userInput]").val());
+		$("#resultTable").append("<tr><td>" + allCatWords[foo] + "</td><td></td></tr>");
+			
+		$.getJSON('/result', {userInputCat : $("input[name=userInput]").val(),} , 
+			
+				function (data) { 
+
+					if (data.result == 0){
+						varCameOutput ="wrong inpurt";
+					}else{
+						varCameOutput  = data.result;
+					};
+				 }
+			).done(function(){
+				
+				$("input[name=timer]").val(varTimerInterval + " seconds left!");
+				//$("input[name=output]").val(varCameOutput);
+
+				varInterval = window.setInterval(timer,1000);				
+
+				varTimeout = setTimeout(function(){
+
+							$("input[name=timer]").val("Game over!");
+							$("input[name=userInput]").attr("disabled","disabled");
+							$("input[name=userInput]").removeClass("noTime"); 
+							$("input[name=userInput]").addClass("normal"); 
+							$("#btn").text("Restart")
+							varTimerInterval = 10;
+							window.clearInterval(varInterval);
+		      				     }		
+						 , varTimerInterval*1000 );
+
+				//allCatWords.push($("input[name=userInput]").val());
+				compOutput.push(varCameOutput);
+
+				//$('#resultTable tr:nth-child(' + foo + ') td:nth-child(2)').text(compOutput[foo]);
+
+			 	$('#resultTable tr:nth-child(' + tRow + ') td:nth-child(2)').text(compOutput[foo]);
+				//$("#resultTable").append("<tr><td>" + allCatWords[foo] + "</td> <td>" + compOutput[foo] + "</td> </tr>");
+				$("input[name=score]").val('Score ' + score);
+				foo+=1;
+				tRow+=1;
+				score+=10;
+			});
+	
+	    };
+	};
+
+	
+
+	var varTimerInterval = 10;
+
+
+	function timer(){
+		
+		if (varTimerInterval > 5){
+			$("input[name=timer]").addClass("haveTime"); 	
+		}
+		else{
+			$("input[name=timer]").addClass("noTime"); 
+			$("input[name=timer]").removeClass("haveTime"); 	
+		};
+
+		varTimerInterval -= 1 ;
+		$("input[name=timer]").val(varTimerInterval + " seconds left!");
+		//console.log(compOutput[0]);
+		
+	};
+
+
+</script>
+
+<style>
+	body {font-family: "Raleway", Arial, sans-serif}
+	.w3-row img {margin-bottom: -8px}
+</style>
+
+<body>
+
+<!-- !PAGE CONTENT! -->
+<div class="w3-content" style="max-width:1500px">
+
+  <!-- Header -->
+  <header class="w3-container w3-xlarge w3-padding-small">
+    <a href="#" class="w3-left w3-button w3-white">MySelf</a>
+    <a href="#about" class="w3-right w3-button w3-white">About</a>
+  </header>
+ 
+  
+
+</div>
+
+<div class="w3-light-grey w3-padding-24 w3-center" id="about">
+
+	<h2><i class="fas fa-book-reader"></i> Category</h2>
+ 
+<!--  <form style="margin:auto;width:60%" action="/action_page.php" target="_blank"> -->
+
+  <form style="margin:auto;width:50%" id="myForm">
+   
+ <div class="w3-section">
+      <br>
+	    <input class="w3-input w3-border" type="text" required name="userInput" placeholder="enter any category's word">
+    </div>
+
+    <br>
+
+	    <button type="button" class="w3-button w3-block w3-dark-grey" id="btn">Play</button>
+ 	 <!--  <button type="button" class="w3-button w3-block w3-dark-grey" id="btnTemp">temp</button>  -->
+
+
+    <br>
+	
+  <div id="content">
+	<p id="ajaxContent"></p>
+  </div>	
+	<div class="w3-flex-container">
+	
+	  <input class="w3-input2 w3-border w3-margin-right" type="text" name="score" id="score" disabled>
+	   <input class="w3-input2 w3-border haveTime" type="text" name="timer" id="timer" disabled>
+
+	</div>
+
+  </form>
+
+</div>
+
+
+<div class="w3-padding-24 " id="result">
+
+	<div style="margin:auto;width:60%" class="">
+	
+	 <table class="w3-table w3-striped w3-white w3-center" id="resultTable">
+	
+	<th class="w3-borderDown"> You </th>
+	
+	<th class="w3-borderDown"> Computer </th>
+
+        </table>
+
+	</div>
+
+</div>
+ 
+</body>
+</html>
